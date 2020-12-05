@@ -1,6 +1,7 @@
 import unittest
-from mitodo import Task, TaskList, App
-from unittest.mock import patch, Mock
+import os
+from mitodo import Task, TaskList, App, FileHandler
+from unittest.mock import patch
 
 
 class TestTask(unittest.TestCase):
@@ -41,7 +42,8 @@ class TestTaskList(unittest.TestCase):
         t5 = tasklist.add_task('Foo3').get_id()
         tasklist.complete_task(t1)
         tasklist.complete_task(t2)
-        tasklist.remove_completed_tasks()
+        n = tasklist.remove_completed_tasks()
+        self.assertEqual(n, 2)
         self.assertEqual(len(tasklist), 3)
         self.assertEqual(tasklist.list_tasks()[0].get_text(), 'Foo2')
 
@@ -56,6 +58,27 @@ class TestTaskList(unittest.TestCase):
         removed = tasklist.remove_task(t3)
         self.assertEqual(removed.get_text(), 'Foo2')
         self.assertEqual(len(tasklist), 4)
+
+
+class TestFileHandler(unittest.TestCase):
+
+    def test_save_and_load_tasks(self):
+        tasklist = TaskList()
+        t1 = tasklist.add_task('Task one').get_id()
+        t2 = tasklist.add_task('Task two').get_id()
+        tasklist.complete_task(t2)
+
+        filename = 'unittest.json'
+        fh = FileHandler(filename)
+        fh.save(tasklist.list_tasks())
+
+        loaded_tasks = fh.load()
+        os.remove(filename)
+        tasklist2 = TaskList()
+        for task in loaded_tasks:
+            tasklist2.add_task(task['text'], task['done'])
+
+        self.assertEqual(str(tasklist), str(tasklist2))
 
 
 if __name__ == "__main__":

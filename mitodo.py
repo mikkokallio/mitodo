@@ -1,4 +1,6 @@
+import json
 import itertools
+import os.path
 import config
 
 
@@ -100,12 +102,38 @@ class TaskList:
         return n - len(self.__tasks)
 
 
+class FileHandler():
+    """Component for loading and saving task list items as .yaml"""
+
+    def __init__(self, todo_file):
+        """Create file handler from filename"""
+        self.__todo_file = todo_file
+
+    def load(self):
+        """Read tasks from file"""
+        if os.path.exists(self.__todo_file):
+            with open(self.__todo_file, 'r') as f:
+                return json.loads(f.read())
+        else:
+            return []
+
+    def save(self, tasks: list):
+        """Write tasks to file"""
+        with open(self.__todo_file, 'w') as f:
+            f.write(json.dumps(
+                [{'text': task.get_text(), 'done': task.is_done()} for task in tasks]))
+
+
 class App:
     """Application for managing a to-do list"""
 
     def __init__(self):
         """Create todo app"""
         self.__tasklist = TaskList(config.MIN_LENGTH)
+        self.__todo_file = FileHandler(config.FILENAME)
+
+        for task in self.__todo_file.load():
+            self.__tasklist.add_task(task['text'], task['done'])
 
     def list_all_tasks(self):
         """Display both active and completed tasks"""
@@ -163,7 +191,7 @@ class App:
         [print(f'{k:>2}: {App.options[k]["text"]}') for k in App.options]
 
     options = {
-        '0': {'text': 'exit', 'function': None},
+        '0': {'text': 'save and exit', 'function': None},
         '1': {'text': 'list all tasks', 'function': list_all_tasks},
         '2': {'text': 'list active tasks', 'function': list_active_tasks},
         '3': {'text': 'add a task', 'function': add_task},
@@ -180,6 +208,9 @@ class App:
             option = input("\nselect: ")
             if option in App.options:
                 if App.options[option]['function'] is None:
+                    tasks = self.__tasklist.list_tasks()
+                    self.__todo_file.save(tasks)
+                    print(f'saved {len(tasks)} tasks')
                     break
                 else:
                     App.options[option]['function'](self)
