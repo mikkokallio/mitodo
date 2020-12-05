@@ -1,4 +1,5 @@
 import itertools
+import config
 
 
 class Task:
@@ -99,10 +100,93 @@ class TaskList:
         return n - len(self.__tasks)
 
 
+class App:
+    """Application for managing a to-do list"""
+
+    def __init__(self):
+        """Create todo app"""
+        self.__tasklist = TaskList(config.MIN_LENGTH)
+
+    def list_all_tasks(self):
+        """Display both active and completed tasks"""
+        print('\n### All tasks\n')
+        tasks = self.__tasklist.list_tasks()
+        if len(tasks) > 0:
+            [print(task) for task in tasks]
+        else:
+            print('No tasks!')
+
+    def list_active_tasks(self):
+        """Display only active tasks"""
+        print('\n### Active tasks\n')
+        tasks = self.__tasklist.list_tasks(filter_done=True)
+        if len(tasks) > 0:
+            [print(task) for task in tasks]
+        else:
+            print('No active tasks!')
+
+    def add_task(self):
+        """Input task name, and add that as task"""
+        text = input('description: ')
+        try:
+            task = self.__tasklist.add_task(text)
+            print(f'added task: {task.get_id()}: {task.get_text()}')
+        except ValueError as ex:
+            print(f'invalid task: {ex}')
+
+    def complete_task(self):
+        """Input task id and mark that task as completed"""
+        id = input('id to complete: ')
+        try:
+            task = self.__tasklist.complete_task(id)
+            print(f'completed task: {task.get_id()}: {task.get_text()}')
+        except ValueError as ex:
+            print(f'invalid task: {ex}')
+
+    def remove_task(self):
+        """Input task id and remove that task"""
+        id = input('id to remove: ')
+        try:
+            task = self.__tasklist.remove_task(id)
+            print(f'removed task: {task.get_id()}: {task.get_text()}')
+        except ValueError as ex:
+            print(f'invalid task: {ex}')
+
+    def remove_completed_tasks(self):
+        """Remove all completed tasks and display how many were removed"""
+        n = self.__tasklist.remove_completed_tasks()
+        print(f'removed {n} tasks')
+
+    def show_options(self):
+        """Display all commands for using the todo list"""
+        print("\n### Options\n")
+        [print(f'{k:>2}: {App.options[k]["text"]}') for k in App.options]
+
+    options = {
+        '0': {'text': 'exit', 'function': None},
+        '1': {'text': 'list all tasks', 'function': list_all_tasks},
+        '2': {'text': 'list active tasks', 'function': list_active_tasks},
+        '3': {'text': 'add a task', 'function': add_task},
+        '4': {'text': 'complete a task', 'function': complete_task},
+        '5': {'text': 'remove a task', 'function': remove_task},
+        '6': {'text': 'remove all completed tasks', 'function': remove_completed_tasks},
+    }
+
+    def run(self):
+        """Main input loop of app"""
+        self.list_all_tasks()
+        self.show_options()
+        while True:
+            option = input("\nselect: ")
+            if option in App.options:
+                if App.options[option]['function'] is None:
+                    break
+                else:
+                    App.options[option]['function'](self)
+            else:
+                self.show_options()
+
+
 if __name__ == "__main__":
-    tasklist = TaskList()
-    tasklist.add_task('Add tasklist to todo app')
-    tasklist.add_task('Add second task')
-    n = tasklist.add_task('Yoyoyo')
-    print(tasklist)
-    print(n.get_id())
+    app = App()
+    app.run()

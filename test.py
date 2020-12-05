@@ -1,5 +1,6 @@
 import unittest
-from mitodo import *
+from mitodo import Task, TaskList, App
+from unittest.mock import patch, Mock
 
 
 class TestTask(unittest.TestCase):
@@ -14,11 +15,13 @@ class TestTask(unittest.TestCase):
 
 class TestTaskList(unittest.TestCase):
 
-    def test_add_task(self):
+    def test_add_tasks(self):
         """Test tasks get added"""
         tasklist = TaskList()
         tasklist.add_task('Create test task')
         self.assertEqual(len(tasklist), 1)
+        tasklist.add_task('Hey look another task')
+        self.assertEqual(len(tasklist), 2)
 
     def test_too_short(self):
         """Test too short task raises error"""
