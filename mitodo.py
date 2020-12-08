@@ -1,6 +1,7 @@
 import json
 import itertools
-import os.path
+import os
+import sys
 import config
 
 
@@ -190,8 +191,15 @@ class App:
         print("\n### Options\n")
         [print(f'{k:>2}: {App.options[k]["text"]}') for k in App.options]
 
+    def save_and_quit(self):
+        """Save current tasks and exit app"""
+        tasks = self.__tasklist.list_tasks()
+        self.__todo_file.save(tasks)
+        print(f'saved {len(tasks)} tasks')
+        sys.exit()
+
     options = {
-        '0': {'text': 'save and exit', 'function': None},
+        '0': {'text': 'save and exit', 'function': save_and_quit},
         '1': {'text': 'list all tasks', 'function': list_all_tasks},
         '2': {'text': 'list active tasks', 'function': list_active_tasks},
         '3': {'text': 'add a task', 'function': add_task},
@@ -207,13 +215,7 @@ class App:
         while True:
             option = input("\nselect: ")
             if option in App.options:
-                if App.options[option]['function'] is None:
-                    tasks = self.__tasklist.list_tasks()
-                    self.__todo_file.save(tasks)
-                    print(f'saved {len(tasks)} tasks')
-                    break
-                else:
-                    App.options[option]['function'](self)
+                App.options[option]['function'](self)
             else:
                 self.show_options()
 
